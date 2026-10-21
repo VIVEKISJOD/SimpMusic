@@ -1,0 +1,26 @@
+name: AmeOS build
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: microsoft
+          cache: gradle
+      - name: Apply AmeOS changes if present
+        run: |
+          if [ -f ameos-overlay.zip ]; then unzip -o ameos-overlay.zip; fi
+      - name: Generate library list
+        run: ./gradlew -PisFullBuild=false exportLibraryDefinitions
+      - name: Build APK
+        run: ./gradlew -PisFullBuild=false androidApp:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AmeOS-Music-apk
+          path: androidApp/build/outputs/apk/debug/*.apk
